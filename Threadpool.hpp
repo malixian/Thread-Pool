@@ -48,11 +48,19 @@ private:
         while (m_running) {
             std::list<Task> list;
             m_queue.Take(list);
-
             for (auto& task : list) {
                 if (!m_running) return;
+                cout<<"消费任务"<<endl;
                 task();
-            }
+            } 
+           /* 
+           cout<<"消费任务之前"<<endl;
+           Task task;
+           m_queue.Take(task);
+           task();
+           cout<<"消费任务之后"<<endl;
+           */
+
         }
     }
 

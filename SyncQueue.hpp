@@ -73,20 +73,21 @@ public:
     bool NotFull() const {
         bool isFull = m_queue.size() >= m_maxSize;
         if(isFull) cout<<"queue is full, please wait"<<endl;
-        return isFull;
+        return !isFull;
     }
 
     // 防止递归用锁，不在此加锁
     bool NotEmpty() const {
         bool isEmpty = m_queue.size() == 0;
         //if(isEmpty) cout<<"queue is empty....thread id:"<<this_thread::get_id()<<endl;
-        return isEmpty;
+        return !isEmpty;
     }
 
     template<typename F>
     void Add(F&& x) {
         std::unique_lock<std::mutex> locker(m_mutex);
-        m_notEmpty.wait(locker, [this]{return m_needStop || NotFull();});
+        // 保持锁的条件，needStop或者不为空
+        m_notFull.wait(locker, [this]{return m_needStop || NotFull();});
         if (m_needStop) {
             return;
         }
@@ -98,7 +99,7 @@ private:
     std::list<T> m_queue; //队列缓冲区
     std::mutex m_mutex; // 互斥量
     std::condition_variable m_notEmpty; //条件变量用于通信
-    std::condition_variable m_notFull; 
+    std::condition_variable m_notFull;
     int m_maxSize; //队列最大容量，方式内存占用过多
     bool m_needStop; //停止标志
 };
